@@ -7,7 +7,7 @@ import codecs
 from scipy.stats import chi2_contingency
 from gensim.models import Word2Vec
 
-# test
+# final test
 
 np.set_printoptions(suppress=True)
 
