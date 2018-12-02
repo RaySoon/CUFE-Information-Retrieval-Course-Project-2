@@ -7,7 +7,6 @@ from nltk.corpus import stopwords
 
 """
 
-
 import csv
 import re
 import xlrd
@@ -200,4 +199,3 @@ if __name__ == '__main__':
     for i in range(4400, 4800, 100):
         print(i)
         toBayes(0.5, 0.5, i, chi_ori_tup, pos_words, neg_words)
-
