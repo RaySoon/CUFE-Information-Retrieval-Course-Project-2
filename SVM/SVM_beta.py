@@ -241,5 +241,8 @@ if __name__ == '__main__':
     # initial word vector
     vectors = toVec(mode=mode, arg_dict=arg_dict, cut=negtit_num, neg_train=neg_train,
                     pos_train=pos_train, test_tit=test_tit)
+    # 正负标题对应的向量
+    neg_vector=vectors[:negtit_num]
+    pos_vector=vectors[negtit_num:]
     print(vectors[0])
     # SVM process
