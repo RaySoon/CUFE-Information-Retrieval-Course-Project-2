@@ -177,14 +177,16 @@ def inChiTopK(word, chisq_tup):
     return False
 
 
-def sumVecs(tits, model, dims):  # 各个词的累加向量
+def meanVecs(tits, model, dims):  # 各个词的累加向量
     result = []
+    count = 0
     for title in tits:
         sum = np.zeros(dims)
         for words in title:
             if words in model.wv.vocab.keys():
                 sum += model.wv[words]
-        result.append(sum)
+                count += 1
+        result.append(sum/count)
     return result
 
 
@@ -219,7 +221,7 @@ def toVec(mode, arg_dict, neg_train, pos_train, cut, test_tit):
 
     # 向量累加
     print("向量累加:")
-    train_suml = sumVecs(train_tit, model, vec_dim)
+    train_suml = meanVecs(train_tit, model, vec_dim)
     return train_suml
 
 
