@@ -4,7 +4,7 @@ import xlrd
 import math
 import numpy as np
 import pandas as pd
-from sklearn import svm,metrics,cross_validation
+from sklearn import svm, metrics, cross_validation
 from scipy import sparse
 import codecs
 from scipy.stats import chi2_contingency
@@ -32,8 +32,6 @@ def sparseTxt(item_list, mode):  # 0,1,2
     url_idt = r"[W]{3}\.[\w]{2,}\.\w+\.*\w*"
     pat_affi = r"\.{2,}"
 
-    count = 0
-    # 辣鸡符号变空格，区分
     if mode == 0:
         result = [re.split("\s+", re.sub(pattern, " ", items.upper()))[:-1] for items in item_list]  # -1:\n存在于末尾
 
@@ -58,23 +56,13 @@ def sparseTxt(item_list, mode):  # 0,1,2
                 pat_words.append('')
             for blocks in re.split("\s+", temp):  # 空格分块
                 pointer = 0
-                # if blocks==".":
-                #     continue
                 for matches in re.finditer(pattern, blocks):
                     span = matches.span()
                     if span[0] != 0 and blocks[pointer:span[0]] not in stop_list:
                         pat_words.append(blocks[pointer:span[0]])
-                    # if re.findall(pat_affi,matches.group()):
-                    #     pat_words.append("...")
-                    # else:
-                    #     pat_words.append(matches.group())
                     pointer = span[1]
                 if pointer < len(blocks):  # 剩下的文本
                     pat_words.append(blocks[pointer:])
-
-            if count < 5:
-                print(pat_words)  # 测试效果
-            count += 1
             result.append(pat_words)
     return result
 
@@ -88,8 +76,6 @@ def initTest(mode):
     for rows in range(1, row):
         result.append(booksheet.cell_value(rows, 1))  # upload all test items
         label.append(booksheet.cell_value(rows, 2))
-    # print(row, col)
-    # print(row,len(result))
     result = sparseTxt(result, mode)
     return result, label
 
@@ -110,7 +96,6 @@ def createDict(list_items):
     for items in list_items:
         temp = []
         for words in items:
-
             if words not in result.keys():
                 result[words] = [1, 1]  # word: word count; doc_count
             else:
@@ -119,58 +104,37 @@ def createDict(list_items):
                     result[words][1] += 1  # 出现的文档数+1
             temp.append(words)
             count += 1
-    # result_dict(word:word_count,word_doc_count),total word count
     return result, count
 
 
 def calChi(pos_dict, postit_num, neg_dict, negdict_num, mode):  # 计算pos/neg 的 chisq 值
     arguments = np.zeros((2, 2))
-    tit_sum = postit_num + negdict_num
     chi_dict = {}
     l_pos = list(pos_dict.keys())
     l_neg = list(neg_dict.keys())
 
     for word in list(set(l_neg + l_pos)):
         chi_dict[word] = 0.0
-        if word in pos_dict.keys():
-            arguments[1][1] = pos_dict[word][1]  # doc_count for word (N11)
-        else:
-            arguments[1][1] = 0
+
+        arguments[1][1] = pos_dict[word][1] if word in pos_dict.keys() else 0
         arguments[0][1] = postit_num - arguments[1][1]
-
-        if word in neg_dict.keys():
-            arguments[1][0] = neg_dict[word][1]
-        else:
-            arguments[1][0] = 0
+        arguments[1][0] = neg_dict[word][1] if word in neg_dict.keys() else 0
         arguments[0][0] = negdict_num - arguments[1][0]
-        Nx_ = np.sum(arguments, axis=1)  # 各行加和
-        N_x = np.sum(arguments, axis=0)  # 各列加和
-
-        # print(arguments)
-
-        # cache[word][0]=oneMI((0,1),arguments,Nx_,N_x)  #pos_MI
 
         chi_dict[word] = chi2_contingency(arguments)[0]  # pos_chisq
-        arguments[:, [0, 1]] = arguments[:, [1, 0]]  # 交换列数
-        # print(arguments)
 
-        # Nx_=np.sum(arguments,axis=1)  # 各行加和
-        # N_x=np.sum(arguments,axis=0)  # 各列加和
-        # cache[word][1]=oneMI((0,1),arguments,Nx_,N_x) # neg MI
-
-    # chisq-sorted
     sort_pos = sorted(chi_dict.items(), key=lambda d: d[1], reverse=True)
     data_write_csv("chisq_words_mode_" + str(mode) + ".csv", sort_pos)
 
     return sort_pos  # 返回chisq数组
 
 
-def data_write_csv(file_name, datas):  # file_name为写入CSV文件的路径，datas为要写入数据列表
+def data_write_csv(file_name, datas):
     file_csv = codecs.open(file_name, 'w+', 'utf-8')  # 追加
     writer = csv.writer(file_csv, delimiter=' ', quotechar=' ', quoting=csv.QUOTE_MINIMAL)
     for data in datas:
         writer.writerow([data[0], data[1]])
-    print("保存文件成功，处理结束")
+    print("保存文件成功")
 
 
 def inChiTopK(word, chisq_tup):
@@ -189,9 +153,9 @@ def meanVecs(tits, model, dims):  # 各个词的累加向量
             if words in model.wv.vocab.keys():
                 sum += model.wv[words]
                 count += 1
-        listlp1=(sum/count).tolist();
+        listlp1 = (sum / count).tolist();
         result.append(listlp1)
-    result1=np.array(result)
+    result1 = np.array(result)
     return result1
 
 
@@ -216,7 +180,7 @@ def toVec(mode, arg_dict, neg_train, pos_train, cut, test_tit):
                      # sg=arg_dict["alg"]
                      min_count=1
                      )
-   # model = Word2Vec(min_count=1)
+    # model = Word2Vec(min_count=1)
 
     model.build_vocab(train_tit)
     model.train(train_tit, total_examples=model.corpus_count,
@@ -235,9 +199,6 @@ def toVec(mode, arg_dict, neg_train, pos_train, cut, test_tit):
 
 
 if __name__ == '__main__':
-    # toBayes(mode=1, p_pos=0.5, p_neg=0.5, word_size_range=(4400, 4800), step=50)
-
-    # args for words2vec in dict:
     mode = 1
     arg_dict = {"size": 100,  # 向量维度数
                 "alpha": 0,  # 学习率
@@ -251,20 +212,20 @@ if __name__ == '__main__':
     vectors = toVec(mode=mode, arg_dict=arg_dict, cut=negtit_num, neg_train=neg_train,
                     pos_train=pos_train, test_tit=test_tit)
     # 正负标题对应的向量
-    neg_vector=vectors[:negtit_num]
-    pos_vector=vectors[negtit_num:]
+    neg_vector = vectors[:negtit_num]
+    pos_vector = vectors[negtit_num:]
     print(vectors[0])
-    listAnswer=[]
+    listAnswer = []
     for i in range(118079):
         listAnswer.append(0)
     for i in range(118079):
         listAnswer.append(1)
 
-    listAnswer2=np.array(listAnswer)
+    listAnswer2 = np.array(listAnswer)
     print(vectors)
     print(listAnswer)
     clf = svm.SVC(kernel='rbf', C=1)
-    clf.fit(vectors,listAnswer2)
+    clf.fit(vectors, listAnswer2)
     print("over")
 
     # SVM process
