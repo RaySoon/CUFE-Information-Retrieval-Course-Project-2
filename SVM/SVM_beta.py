@@ -239,21 +239,21 @@ if __name__ == '__main__':
 
     # args for words2vec in dict:
     mode = 1
-    arg_dict = {"size": 1,  # 向量维度数
+    arg_dict = {"size": 100,  # 向量维度数
                 "alpha": 0,  # 学习率
                 "min_count": 2,  # 词频min_count以下不计入考虑范围
                 "alg": 1  # Training algorithm: 1 for skip-gram; otherwise CBOW.
                 }
     # 初始化各路参数
     neg_train, negtit_num, pos_train, postit_num = initTrain(mode)  # l:标题数目
-    print(len(neg_train))
-    print(negtit_num)
-    print(len(pos_train))
-    print(postit_num)
     test_tit, test_lab = initTest(mode + 1)
     # initial word vector
     vectors = toVec(mode=mode, arg_dict=arg_dict, cut=negtit_num, neg_train=neg_train,
                     pos_train=pos_train, test_tit=test_tit)
+    # 正负标题对应的向量
+    neg_vector=vectors[:negtit_num]
+    pos_vector=vectors[negtit_num:]
+    print(vectors[0])
     listAnswer=[]
     for i in range(118079):
         listAnswer.append(0)
