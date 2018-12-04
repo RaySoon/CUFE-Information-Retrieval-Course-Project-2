@@ -2,7 +2,7 @@ import csv
 import re
 import xlrd
 import math
-import  numpy as np
+import numpy as np
 import pandas as pd
 from sklearn import svm, metrics, cross_validation
 from scipy import sparse
@@ -90,58 +90,58 @@ def initTrain(mode):  # neg,pos in list
     return neg_train, neg_len, pos_train, pos_len  # 二维分词数组，title数
 
 
-def createDict(list_items):
-    result = {}
-    count = 0
-    for items in list_items:
-        temp = []
-        for words in items:
-            if words not in result.keys():
-                result[words] = [1, 1]  # word: word count; doc_count
-            else:
-                result[words][0] += 1  # 出现的词汇数+1
-                if words not in temp:  # 此title已经加过文档数
-                    result[words][1] += 1  # 出现的文档数+1
-            temp.append(words)
-            count += 1
-    return result, count
+# def createDict(list_items):
+#     result = {}
+#     count = 0
+#     for items in list_items:
+#         temp = []
+#         for words in items:
+#             if words not in result.keys():
+#                 result[words] = [1, 1]  # word: word count; doc_count
+#             else:
+#                 result[words][0] += 1  # 出现的词汇数+1
+#                 if words not in temp:  # 此title已经加过文档数
+#                     result[words][1] += 1  # 出现的文档数+1
+#             temp.append(words)
+#             count += 1
+#     return result, count
 
 
-def calChi(pos_dict, postit_num, neg_dict, negdict_num, mode):  # 计算pos/neg 的 chisq 值
-    arguments = np.zeros((2, 2))
-    chi_dict = {}
-    l_pos = list(pos_dict.keys())
-    l_neg = list(neg_dict.keys())
+# def calChi(pos_dict, postit_num, neg_dict, negdict_num, mode):  # 计算pos/neg 的 chisq 值
+#     arguments = np.zeros((2, 2))
+#     chi_dict = {}
+#     l_pos = list(pos_dict.keys())
+#     l_neg = list(neg_dict.keys())
+#
+#     for word in list(set(l_neg + l_pos)):
+#         chi_dict[word] = 0.0
+#
+#         arguments[1][1] = pos_dict[word][1] if word in pos_dict.keys() else 0
+#         arguments[0][1] = postit_num - arguments[1][1]
+#         arguments[1][0] = neg_dict[word][1] if word in neg_dict.keys() else 0
+#         arguments[0][0] = negdict_num - arguments[1][0]
+#
+#         chi_dict[word] = chi2_contingency(arguments)[0]  # pos_chisq
+#
+#     sort_pos = sorted(chi_dict.items(), key=lambda d: d[1], reverse=True)
+#     data_write_csv("chisq_words_mode_" + str(mode) + ".csv", sort_pos)
+#
+#     return sort_pos  # 返回chisq数组
 
-    for word in list(set(l_neg + l_pos)):
-        chi_dict[word] = 0.0
-
-        arguments[1][1] = pos_dict[word][1] if word in pos_dict.keys() else 0
-        arguments[0][1] = postit_num - arguments[1][1]
-        arguments[1][0] = neg_dict[word][1] if word in neg_dict.keys() else 0
-        arguments[0][0] = negdict_num - arguments[1][0]
-
-        chi_dict[word] = chi2_contingency(arguments)[0]  # pos_chisq
-
-    sort_pos = sorted(chi_dict.items(), key=lambda d: d[1], reverse=True)
-    data_write_csv("chisq_words_mode_" + str(mode) + ".csv", sort_pos)
-
-    return sort_pos  # 返回chisq数组
+#
+# def data_write_csv(file_name, datas):
+#     file_csv = codecs.open(file_name, 'w+', 'utf-8')  # 追加
+#     writer = csv.writer(file_csv, delimiter=' ', quotechar=' ', quoting=csv.QUOTE_MINIMAL)
+#     for data in datas:
+#         writer.writerow([data[0], data[1]])
+#     print("保存文件成功")
 
 
-def data_write_csv(file_name, datas):
-    file_csv = codecs.open(file_name, 'w+', 'utf-8')  # 追加
-    writer = csv.writer(file_csv, delimiter=' ', quotechar=' ', quoting=csv.QUOTE_MINIMAL)
-    for data in datas:
-        writer.writerow([data[0], data[1]])
-    print("保存文件成功")
-
-
-def inChiTopK(word, chisq_tup):
-    for items in chisq_tup:
-        if word == items[0]:
-            return True
-    return False
+# def inChiTopK(word, chisq_tup):
+#     for items in chisq_tup:
+#         if word == items[0]:
+#             return True
+#     return False
 
 
 def meanVecs(tits, model, dims):  # 各个词的累加向量
@@ -159,26 +159,25 @@ def meanVecs(tits, model, dims):  # 各个词的累加向量
     return result1
 
 
-def regularMatchEmail(email):
-    pattern = re.match(r'\w+@([0-9a-zA-Z]+[-0-9a-zA-Z]*)(\.[0-9a-zA-Z]+[-0-9a-zA-Z]*)+', email, re.IGNORECASE)
-    if pattern:
-        print(email)
-    else:
-        print("invalid eamil")
+# def regularMatchEmail(email):
+#     pattern = re.match(r'\w+@([0-9a-zA-Z]+[-0-9a-zA-Z]*)(\.[0-9a-zA-Z]+[-0-9a-zA-Z]*)+', email, re.IGNORECASE)
+#     if pattern:
+#         print(email)
+#     else:
+#         print("invalid eamil")
 
 
-def toVec(mode, arg_dict, neg_train, pos_train,test_tit):
-    print("daixoa")
+def toVec(mode, arg_dict, neg_train, pos_train, test_tit):
     print(len(neg_train))
     print(len(pos_train))
     train_tit = neg_train + pos_train
-    cut=len(neg_train)
-    print("cut:",cut)
+    cut = len(neg_train)
+    print("cut:", cut)
 
     # 注释决定哪些参数启用
     model = Word2Vec(size=arg_dict["size"],
-                     # alpha=arg_dict["alpha"],
-                     # sg=arg_dict["alg"],
+                     # alpha=argDict["alpha"],
+                     # sg=argDict["alg"],
                      min_count=arg_dict["min_count"]
                      )
     # model = Word2Vec(min_count=1)
@@ -196,14 +195,14 @@ def toVec(mode, arg_dict, neg_train, pos_train,test_tit):
     # 向量平均
     print("向量平均:")
     trainMeanVector = meanVecs(train_tit, model, vec_dim)
-    testMeanVector= meanVecs(test_tit,model,vec_dim)
-    trainLab = cut*[0]+cut*[1]
+    testMeanVector = meanVecs(test_tit, model, vec_dim)
+    trainLab = cut * [0] + cut * [1]
     # for i in range(cut):
     #     listAnswer.append(0)
     # for i in range(118079):
     #     listAnswer.append(1)
 
-    return trainMeanVector,trainLab,testMeanVector
+    return trainMeanVector, trainLab, testMeanVector
 
 
 if __name__ == '__main__':
@@ -218,8 +217,8 @@ if __name__ == '__main__':
     testTitle, testLabel = initTest(mode + 1)
 
     # initial word vector
-    trainEntry,trainLabel,testEntry= toVec(mode=mode, arg_dict=arg_dict, neg_train=negTrain,
-                                    pos_train=posTrain, test_tit=testTitle)
+    trainEntry, trainLabel, testEntry = toVec(mode=mode, arg_dict=arg_dict, neg_train=negTrain,
+                                              pos_train=posTrain, test_tit=testTitle)
     print("vector convertion finished")
 
     # print(vectors[0])
@@ -233,7 +232,6 @@ if __name__ == '__main__':
     # listAnswer2 = np.array(listAnswer)
     # x_train, x_test, y_train, y_test = cross_validation.train_test_split(trainVectors, listAnswer2, test_size=0.1)
 
-
     clf = svm.SVC(kernel='rbf', C=1)
     # print("xtrain")
     # print(x_train)
@@ -243,13 +241,12 @@ if __name__ == '__main__':
     # clf.fit(vectors, listAnswer2)
     clf.fit(trainEntry, trainLabel)
     # pre = clf.predict(x_test)
-    prediction=clf.predict(testEntry)
+    prediction = clf.predict(testEntry)
     print("over")
-    #准确率
+    # 准确率
     # score=metrics.accuracy_score(y_test,pre)
     score = metrics.accuracy_score(testLabel, prediction)
     print("准确率为：")
     print(score)
-
 
     # SVM process
