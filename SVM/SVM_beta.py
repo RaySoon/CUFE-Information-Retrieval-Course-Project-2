@@ -2,7 +2,7 @@ import csv
 import re
 import xlrd
 import math
-import numpy as np
+import  numpy as np
 import pandas as pd
 from sklearn import svm, metrics, cross_validation
 from scipy import sparse
@@ -153,7 +153,7 @@ def meanVecs(tits, model, dims):  # 各个词的累加向量
             if words in model.wv.vocab.keys():
                 sum += model.wv[words]
                 count += 1
-        listlp1 = (sum / count).tolist();
+        listlp1 = (sum / count).tolist()
         result.append(listlp1)
     result1 = np.array(result)
     return result1
@@ -167,74 +167,87 @@ def regularMatchEmail(email):
         print("invalid eamil")
 
 
-def toVec(mode, arg_dict, neg_train, pos_train, cut, test_tit):
+def toVec(mode, arg_dict, neg_train, pos_train,test_tit):
     print("daixoa")
     print(len(neg_train))
     print(len(pos_train))
     train_tit = neg_train + pos_train
+    cut=len(neg_train)
+    print("cut:",cut)
 
     # 注释决定哪些参数启用
     model = Word2Vec(size=arg_dict["size"],
                      # alpha=arg_dict["alpha"],
-                     # min_count=arg_dict["min_count"],
-                     # sg=arg_dict["alg"]
-                     min_count=1
+                     # sg=arg_dict["alg"],
+                     min_count=arg_dict["min_count"]
                      )
     # model = Word2Vec(min_count=1)
 
     model.build_vocab(train_tit)
     model.train(train_tit, total_examples=model.corpus_count,
                 epochs=model.iter, )
-    print(model.corpus_count)
+    # print(model.corpus_count)
     vec_dim = arg_dict["size"]
 
     # inspection
-    print(model.wv["SPRINTLINK"])
+    # print(model.wv["SPRINTLINK"])
     # print(neg_model.wv["GENERAL"])
 
-    # 向量累加
-    print("向量累加:")
-    train_suml = meanVecs(train_tit, model, vec_dim)
-    return train_suml
+    # 向量平均
+    print("向量平均:")
+    trainMeanVector = meanVecs(train_tit, model, vec_dim)
+    testMeanVector= meanVecs(test_tit,model,vec_dim)
+    trainLab = cut*[0]+cut*[1]
+    # for i in range(cut):
+    #     listAnswer.append(0)
+    # for i in range(118079):
+    #     listAnswer.append(1)
+
+    return trainMeanVector,trainLab,testMeanVector
 
 
 if __name__ == '__main__':
     mode = 1
-    arg_dict = {"size": 10,  # 向量维度数
+    arg_dict = {"size": 50,  # 向量维度数
                 "alpha": 0,  # 学习率
-                "min_count": 2,  # 词频min_count以下不计入考虑范围
+                "min_count": 10,  # 词频min_count以下不计入考虑范围
                 "alg": 1  # Training algorithm: 1 for skip-gram; otherwise CBOW.
                 }
     # 初始化各路参数
-    neg_train, negtit_num, pos_train, postit_num = initTrain(mode)  # l:标题数目
-    test_tit, test_lab = initTest(mode + 1)
-    # initial word vector
-    vectors = toVec(mode=mode, arg_dict=arg_dict, cut=negtit_num, neg_train=neg_train,
-                    pos_train=pos_train, test_tit=test_tit)
-    # 正负标题对应的向量
-    neg_vector = vectors[:negtit_num]
-    pos_vector = vectors[negtit_num:]
-    # print(vectors[0])
-    listAnswer = []
-    for i in range(118079):
-        listAnswer.append(0)
-    for i in range(118079):
-        listAnswer.append(1)
+    negTrain, negTitleNum, posTrain, posTitleNum = initTrain(mode)  # l:标题数目
+    testTitle, testLabel = initTest(mode + 1)
 
-    listAnswer2 = np.array(listAnswer)
-    x_train, x_test, y_train, y_test = cross_validation.train_test_split(vectors,listAnswer2, test_size=0.1)
+    # initial word vector
+    trainEntry,trainLabel,testEntry= toVec(mode=mode, arg_dict=arg_dict, neg_train=negTrain,
+                                    pos_train=posTrain, test_tit=testTitle)
+    print("vector convertion finished")
+
+    # print(vectors[0])
+
+    # listAnswer = []
+    # for i in range(118079):
+    #     listAnswer.append(0)
+    # for i in range(118079):
+    #     listAnswer.append(1)
+    #
+    # listAnswer2 = np.array(listAnswer)
+    # x_train, x_test, y_train, y_test = cross_validation.train_test_split(trainVectors, listAnswer2, test_size=0.1)
+
+
     clf = svm.SVC(kernel='rbf', C=1)
-    print("xtrain")
-    print(x_train)
-    print("ytrain")
-    print(y_train)
-    print("yyyyyy")
+    # print("xtrain")
+    # print(x_train)
+    # print("ytrain")
+    # print(y_train)
+    # print("yyyyyy")
     # clf.fit(vectors, listAnswer2)
-    clf.fit(x_train,y_train)
-    pre = clf.predict(x_test)
+    clf.fit(trainEntry, trainLabel)
+    # pre = clf.predict(x_test)
+    prediction=clf.predict(testEntry)
     print("over")
     #准确率
-    score=metrics.accuracy_score(y_test,pre)
+    # score=metrics.accuracy_score(y_test,pre)
+    score = metrics.accuracy_score(testLabel, prediction)
     print("准确率为：")
     print(score)
 
