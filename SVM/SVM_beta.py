@@ -3,6 +3,9 @@ import re
 import xlrd
 import math
 import numpy as np
+import pandas as pd
+from sklearn import svm,metrics,cross_validation
+from scipy import sparse
 import codecs
 from scipy.stats import chi2_contingency
 from gensim.models import Word2Vec
@@ -186,8 +189,10 @@ def meanVecs(tits, model, dims):  # 各个词的累加向量
             if words in model.wv.vocab.keys():
                 sum += model.wv[words]
                 count += 1
-        result.append(sum/count)
-    return result
+        listlp1=(sum/count).tolist();
+        result.append(listlp1)
+    result1=np.array(result)
+    return result1
 
 
 def regularMatchEmail(email):
@@ -199,6 +204,9 @@ def regularMatchEmail(email):
 
 
 def toVec(mode, arg_dict, neg_train, pos_train, cut, test_tit):
+    print("daixoa")
+    print(len(neg_train))
+    print(len(pos_train))
     train_tit = neg_train + pos_train
 
     # 注释决定哪些参数启用
@@ -206,8 +214,9 @@ def toVec(mode, arg_dict, neg_train, pos_train, cut, test_tit):
                      # alpha=arg_dict["alpha"],
                      # min_count=arg_dict["min_count"],
                      # sg=arg_dict["alg"]
+                     min_count=1
                      )
-    model = Word2Vec(min_count=1)
+   # model = Word2Vec(min_count=1)
 
     model.build_vocab(train_tit)
     model.train(train_tit, total_examples=model.corpus_count,
@@ -230,16 +239,32 @@ if __name__ == '__main__':
 
     # args for words2vec in dict:
     mode = 1
-    arg_dict = {"size": 100,  # 向量维度数
+    arg_dict = {"size": 1,  # 向量维度数
                 "alpha": 0,  # 学习率
                 "min_count": 2,  # 词频min_count以下不计入考虑范围
                 "alg": 1  # Training algorithm: 1 for skip-gram; otherwise CBOW.
                 }
     # 初始化各路参数
     neg_train, negtit_num, pos_train, postit_num = initTrain(mode)  # l:标题数目
+    print(len(neg_train))
+    print(negtit_num)
+    print(len(pos_train))
+    print(postit_num)
     test_tit, test_lab = initTest(mode + 1)
     # initial word vector
     vectors = toVec(mode=mode, arg_dict=arg_dict, cut=negtit_num, neg_train=neg_train,
                     pos_train=pos_train, test_tit=test_tit)
-    print(vectors[0])
+    listAnswer=[]
+    for i in range(118079):
+        listAnswer.append(0)
+    for i in range(118079):
+        listAnswer.append(1)
+
+    listAnswer2=np.array(listAnswer)
+    print(vectors)
+    print(listAnswer)
+    clf = svm.SVC(kernel='rbf', C=1)
+    clf.fit(vectors,listAnswer2)
+    print("over")
+
     # SVM process
