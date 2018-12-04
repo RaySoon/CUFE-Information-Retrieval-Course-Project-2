@@ -200,7 +200,7 @@ def toVec(mode, arg_dict, neg_train, pos_train, cut, test_tit):
 
 if __name__ == '__main__':
     mode = 1
-    arg_dict = {"size": 100,  # 向量维度数
+    arg_dict = {"size": 10,  # 向量维度数
                 "alpha": 0,  # 学习率
                 "min_count": 2,  # 词频min_count以下不计入考虑范围
                 "alg": 1  # Training algorithm: 1 for skip-gram; otherwise CBOW.
@@ -214,7 +214,7 @@ if __name__ == '__main__':
     # 正负标题对应的向量
     neg_vector = vectors[:negtit_num]
     pos_vector = vectors[negtit_num:]
-    print(vectors[0])
+    # print(vectors[0])
     listAnswer = []
     for i in range(118079):
         listAnswer.append(0)
@@ -222,10 +222,21 @@ if __name__ == '__main__':
         listAnswer.append(1)
 
     listAnswer2 = np.array(listAnswer)
-    print(vectors)
-    print(listAnswer)
+    x_train, x_test, y_train, y_test = cross_validation.train_test_split(vectors,listAnswer2, test_size=0.1)
     clf = svm.SVC(kernel='rbf', C=1)
-    clf.fit(vectors, listAnswer2)
+    print("xtrain")
+    print(x_train)
+    print("ytrain")
+    print(y_train)
+    print("yyyyyy")
+    # clf.fit(vectors, listAnswer2)
+    clf.fit(x_train,y_train)
+    pre = clf.predict(x_test)
     print("over")
+    #准确率
+    score=metrics.accuracy_score(y_test,pre)
+    print("准确率为：")
+    print(score)
+
 
     # SVM process
