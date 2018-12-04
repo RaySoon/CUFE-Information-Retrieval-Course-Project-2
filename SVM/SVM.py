@@ -100,11 +100,8 @@ def meanVecs(tits, model, dims):  # 各个词的累加向量
 
 
 def toVec(argDict, negTrain, posTrain, testTitle):
-    print(len(negTrain))
-    print(len(posTrain))
     trainTitle = negTrain + posTrain
     cut = len(negTrain)
-    print("cut:", cut)
 
     # 注释决定哪些参数启用
     model = Word2Vec(size=argDict["size"],
@@ -122,7 +119,7 @@ def toVec(argDict, negTrain, posTrain, testTitle):
     print("向量平均:")
     trainMeanVector = meanVecs(trainTitle, model, vectorDim)
     testMeanVector = meanVecs(testTitle, model, vectorDim)
-    trainLab = cut * [0] + cut * [1]
+    trainLab = cut * ["N"] + cut * ["Y"]
 
     return trainMeanVector, trainLab, testMeanVector
 
@@ -131,23 +128,24 @@ if __name__ == '__main__':
     mode = 1
     argDict = {"size": 50,  # 向量维度数
                 "alpha": 0,  # 学习率
-                "min_count": 10,  # 词频min_count以下不计入考虑范围
+                "min_count": 1,  # 词频min_count以下不计入考虑范围
                 "alg": 1  # Training algorithm: 1 for skip-gram; otherwise CBOW.˚
                }
     # 初始化各路参数
     negTrain, negTitleNum, posTrain, posTitleNum = initTrain(mode)  # l:标题数目
     testTitle, testLabel = initTest(mode + 1)
 
+
     # initial word vector
     trainEntry, trainLabel, testEntry = toVec(argDict=argDict, negTrain=negTrain,
                                               posTrain=posTrain, testTitle=testTitle)
     print("vector convert finished")
 
-    clf = svm.SVC(kernel='rbf', C=1)
+    clf = svm.SVC(kernel='rbf', C=1,max_iter=1000)
     clf.fit(trainEntry, trainLabel)
     # pre = clf.predict(x_test)
     prediction = clf.predict(testEntry)
-    print("over")
+    print("SVM over")
     # 准确率
     score = metrics.accuracy_score(testLabel, prediction)
     print("准确率为：")
