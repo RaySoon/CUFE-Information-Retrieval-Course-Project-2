@@ -32,32 +32,33 @@ def sparseTxt(itemList, mode):  # 0,1,2
     else:  # 垃圾符号集计入分词列表中
         result = []
         for items in itemList:
+            patWords = []
+
             if mode == 2:
                 temp = items.upper().strip()  # csv文件不用去\n
             else:
                 temp = items.upper()[:-1].strip()  # 去\n
-            pat_words = []
 
             for matches in re.findall(urlFilter, temp):  # 网址归一化
                 temp = temp.replace(matches, " ")
-                pat_words.append("#WEBSITE")
+                patWords.append("#WEBSITE")
 
             while re.search(dotFilter, temp):  # ..*n 归一化
                 temp = temp.replace(re.search(dotFilter, temp).group(), " ")
-                pat_words.append("...")
+                patWords.append("...")
 
             if len(temp) == 0:
-                pat_words.append('')
+                patWords.append('')
             for blocks in re.split("\s+", temp):  # 空格分块
                 pointer = 0
                 for matches in re.finditer(pattern, blocks):
                     span = matches.span()
                     if span[0] != 0 and blocks[pointer:span[0]] not in stopList:
-                        pat_words.append(blocks[pointer:span[0]])
+                        patWords.append(blocks[pointer:span[0]])
                     pointer = span[1]
                 if pointer < len(blocks):  # 剩下的文本
-                    pat_words.append(blocks[pointer:])
-            result.append(pat_words)
+                    patWords.append(blocks[pointer:])
+            result.append(patWords)
     return result
 
 

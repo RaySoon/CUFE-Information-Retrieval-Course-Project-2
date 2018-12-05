@@ -107,7 +107,7 @@ def initTrain(mode):  # neg,pos in list
 #     return result, count
 
 
-# def calChi(pos_dict, postit_num, neg_dict, negdict_num, mode):  # 计算pos/neg 的 chisq 值
+# def calChi(pos_dict, posTitleNum, neg_dict, negdict_num, mode):  # 计算pos/neg 的 chisq 值
 #     arguments = np.zeros((2, 2))
 #     chi_dict = {}
 #     l_pos = list(pos_dict.keys())
@@ -117,7 +117,7 @@ def initTrain(mode):  # neg,pos in list
 #         chi_dict[word] = 0.0
 #
 #         arguments[1][1] = pos_dict[word][1] if word in pos_dict.keys() else 0
-#         arguments[0][1] = postit_num - arguments[1][1]
+#         arguments[0][1] = posTitleNum - arguments[1][1]
 #         arguments[1][0] = neg_dict[word][1] if word in neg_dict.keys() else 0
 #         arguments[0][0] = negdict_num - arguments[1][0]
 #
