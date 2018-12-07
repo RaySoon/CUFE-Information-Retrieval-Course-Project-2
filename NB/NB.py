@@ -19,6 +19,7 @@ from wordcloud import WordCloud
 
 np.set_printoptions(suppress=True)
 
+
 def parseTitles(titleList, type):
     '''
     :param titleList: 标题读取的列表
@@ -66,8 +67,8 @@ def parseTitles(titleList, type):
         if len(temp) == 0:
             patWords.append('')
         else:
-            temp=re.sub(urlFilter," .WEBSITE. ",temp)
-            temp=re.sub(dotFilter," .DOT. ",temp)
+            temp = re.sub(urlFilter, " .WEBSITE. ", temp)
+            temp = re.sub(dotFilter, " .DOT. ", temp)
 
             for blocks in re.split("\s+", temp):  # 空格分块
                 pointer = 0
@@ -151,10 +152,10 @@ def calChi(posDict, posTitleNumber, negDict, negDictNum):  # 计算pos/neg 的 c
     :return: chisq从高到低排序过的词tuple:[(词，词频）...]
 
     一个词的列联表（argument)：
-                neg       pos
+                  neg       pos
 
+    word not in
     word in
-    not in
 
     '''
     arguments = np.zeros((2, 2))
@@ -256,6 +257,6 @@ if __name__ == '__main__':
 
     chisqIndex = calChi(posWords, posTitleNum, negWords, negTitleNum)  # tup: (word,[chisq])
     # 4200
-    for i in range(4000, 4300,100):
+    for i in range(4000, 4300, 100):
         print(i)
         toBayes(0.5, 0.5, i, chisqIndex, posWords, negWords, testLab)
