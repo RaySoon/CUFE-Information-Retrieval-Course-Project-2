@@ -7,7 +7,10 @@ from gensim.models import Word2Vec
 np.set_printoptions(suppress=True)
 
 
-def sparseTxt(itemList, mode):  # 0,1,2
+def parseTitles(titleList, mode):
+    ''''''
+
+    # for a
     pattern = r'(,|/|;|\'|`|\[|\]|<|>|\?|:|"|\{|\}|\~|!|@|#|\$|%|\^|&|\(|\)|=|\_|\+|，|。|、|；|‘|’|【|】|·|！|…|（|）|\*)+'
     stopList = ["VERY", "OURSELVES", "AM", "DOESN", "THROUGH", "ME", "AGAINST", "UP", "JUST", "HER", "OURS",
                 "COULDN", "BECAUSE", "IS", "ISN", "IT", "ONLY", "IN", "SUCH", "TOO", "MUSTN", "UNDER", "THEIR",
@@ -19,47 +22,50 @@ def sparseTxt(itemList, mode):  # 0,1,2
                 "THESE", "FURTHER", "MOST", "YOURSELF", "HAVING", "AREN", "HERE", "HE", "WERE", "BUT", "THIS",
                 "MYSELF", "OWN", "WE", "SO", "I", "DOES", "BOTH", "WHEN", "BETWEEN", "D", "HAD", "THE", "Y",
                 "HAS", "DOWN", "OFF", "THAN", "HAVEN", "WHOM", "WOULDN", "SHOULD", "VE", "OVER", "THEMSELVES",
-                "FEW", "THEN", "HADN", "WHAT", "UNTIL", "WON", "NO", "ABOUT", "ANY", "THAT", "FOR", "SHOULDN",
-                "DON", "DO", "THERE", "DOING", "AN", "OR", "AIN", "HERS", "WASN", "WEREN", "ABOVE", "A",
+                "FEW", "THEN", "HADN", "WHAT", "UNTIL", "WON", "NO", "ABOUT", "ANY", "THAT", "SHOULDN",
+                "DON", "DO", "THERE", "DOING", "AN", "OR", "AIN", "HERS", "WASN", "WEREN", "ABOVE",
                 "AT", "YOUR", "THEIRS", "BELOW", "OTHER", "NOT", "RE", "HIM", "DURING", "WHICH"]
 
     urlFilter = r"[W]{3}\.[\w]{2,}\.\w+\.*\w*"
-    dotFilter = r"\.{2,}"
+    dotFilter = r"\.{2,100}"
 
-    if mode == 0:
-        result = [re.split("\s+", re.sub(pattern, " ", items.upper()))[:-1] for items in itemList]  # -1:\n存在于末尾
+    if mode == 0:  # bi-gram
+        result = [re.split("\s+", re.sub(pattern, " ", items.upper()))[:-1] for items in titleList]  # -1:\n存在于末尾
 
     else:  # 垃圾符号集计入分词列表中
         result = []
-        for items in itemList:
+        for items in titleList:
             patWords = []
+
 
             if mode == 2:
                 temp = items.upper().strip()  # csv文件不用去\n
             else:
                 temp = items.upper()[:-1].strip()  # 去\n
 
-            for matches in re.findall(urlFilter, temp):  # 网址归一化
-                temp = temp.replace(matches, " ")
-                patWords.append("#WEBSITE")
-
-            while re.search(dotFilter, temp):  # ..*n 归一化
-                temp = temp.replace(re.search(dotFilter, temp).group(), " ")
-                patWords.append("...")
-
             if len(temp) == 0:
                 patWords.append('')
-            for blocks in re.split("\s+", temp):  # 空格分块
-                pointer = 0
-                for matches in re.finditer(pattern, blocks):
-                    span = matches.span()
-                    if span[0] != 0 and blocks[pointer:span[0]] not in stopList:
-                        patWords.append(blocks[pointer:span[0]])
-                    pointer = span[1]
-                if pointer < len(blocks):  # 剩下的文本
-                    patWords.append(blocks[pointer:])
+            else:
+                temp=re.sub(urlFilter," .WEBSITE. ",temp)
+                temp=re.sub(dotFilter," .DOT. ",temp)
+
+                for blocks in re.split("\s+", temp):  # 空格分块
+                    pointer = 0
+
+                    for matches in re.finditer(pattern, blocks):
+                        span = matches.span()
+                        if span[0] != 0 and blocks[pointer:span[0]] not in stopList:
+                        # if span[0] != 0 :
+                            patWords.append(blocks[pointer:span[0]])
+                        pointer = span[1]
+                    if pointer < len(blocks):  # 剩下的文本
+                        if blocks[pointer:] not in stopList:
+                            patWords.append(blocks[pointer:])
+
             result.append(patWords)
     return result
+
+
 
 
 def initTest(mode):
@@ -71,7 +77,7 @@ def initTest(mode):
     for rows in range(1, row):
         result.append(booksheet.cell_value(rows, 1))  # upload all test items
         label.append(booksheet.cell_value(rows, 2))
-    result = sparseTxt(result, mode)
+    result = parseTitles(result, mode)
     return result, label
 
 
@@ -80,8 +86,8 @@ def initTrain(mode):  # neg,pos in list
     posTrain = open("../DATA/positive_train.txt", encoding='cp936').readlines()
     negLen = len(negTrain)
     posLen = len(posTrain)
-    negTrain = sparseTxt(negTrain, mode)
-    posTrain = sparseTxt(posTrain, mode)
+    negTrain = parseTitles(negTrain, mode)
+    posTrain = parseTitles(posTrain, mode)
     return negTrain, negLen, posTrain, posLen  # 二维分词数组，title数
 
 
