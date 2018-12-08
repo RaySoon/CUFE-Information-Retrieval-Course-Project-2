@@ -5,6 +5,8 @@ from gensim.parsing.porter import PorterStemmer
 nltk 清洗停用词也是同样的原因
 from nltk.corpus import stopwords
 
+4200取到最优解
+
 """
 
 import csv
@@ -14,7 +16,7 @@ import math
 import numpy as np
 import codecs
 from scipy.stats import chi2_contingency
-import matplotlib as plt
+import matplotlib.pyplot as plt
 from wordcloud import WordCloud
 
 np.set_printoptions(suppress=True)
@@ -245,6 +247,22 @@ def toBayes(posProb, negProb, wordSize, chisqIndex, posWords, negWords, testLabe
             resultList.append([str(titles) + ",", str(judge) + ",", str(testLabel[pinLab])])
         pinLab += 1
     print("error ", countFalse)
+    return countTrue
+
+def generateWordsCloud(wordDict,name):
+    '''
+
+    :param wordDict: pos/negwords
+    :param name: pos/neg,决定存储的图片名字
+    :return:
+    '''
+    wordFrequencyDict = {key: value[0] for key, value in wordDict.items() if value[0] > 10}
+    wordCloud = WordCloud(
+        background_color='black',
+        width=800,
+        height=800
+    ).generate_from_frequencies(wordFrequencyDict)
+    wordCloud.to_file("../VISUALIZATION/%s wordcloud.png"%name)
 
 
 if __name__ == '__main__':
@@ -255,8 +273,25 @@ if __name__ == '__main__':
     negTypes = len(negWords.keys())
     posTypes = len(posWords.keys())
 
-    chisqIndex = calChi(posWords, posTitleNum, negWords, negTitleNum)  # tup: (word,[chisq])
+    chisqIndex = calChi(posWords, posTitleNum, negWords, negTitleNum)  # tup: (word,chisq)
+
+
+    generateWordsCloud(negWords,"neg")
+    generateWordsCloud(posWords,"pos")
+
+
     # 4200
-    for i in range(4000, 4300, 100):
+    xRange=[]
+    yRate=[]
+    for i in range(3000, 8100, 300):
         print(i)
-        toBayes(0.5, 0.5, i, chisqIndex, posWords, negWords, testLab)
+        yRate.append(toBayes(0.5, 0.5, i, chisqIndex, posWords, negWords, testLab))
+        xRange.append(i)
+    plt.plot(xRange,yRate)
+    plt.ylabel('correct rate')
+    plt.xlabel('index range')
+    plt.show()
+
+
+
+
