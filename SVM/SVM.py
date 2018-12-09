@@ -1,6 +1,8 @@
 import re
 import xlrd
 import numpy as np
+import csv
+import codecs
 from sklearn import svm, metrics
 from gensim.models import Word2Vec
 
@@ -37,7 +39,6 @@ def parseTitles(titleList, mode):
         for items in titleList:
             patWords = []
 
-
             if mode == 2:
                 temp = items.upper().strip()  # csv文件不用去\n
             else:
@@ -46,8 +47,8 @@ def parseTitles(titleList, mode):
             if len(temp) == 0:
                 patWords.append('')
             else:
-                temp=re.sub(urlFilter," .WEBSITE. ",temp)
-                temp=re.sub(dotFilter," .DOT. ",temp)
+                temp = re.sub(urlFilter, " .WEBSITE. ", temp)
+                temp = re.sub(dotFilter, " .DOT. ", temp)
 
                 for blocks in re.split("\s+", temp):  # 空格分块
                     pointer = 0
@@ -55,7 +56,7 @@ def parseTitles(titleList, mode):
                     for matches in re.finditer(pattern, blocks):
                         span = matches.span()
                         if span[0] != 0 and blocks[pointer:span[0]] not in stopList:
-                        # if span[0] != 0 :
+                            # if span[0] != 0 :
                             patWords.append(blocks[pointer:span[0]])
                         pointer = span[1]
                     if pointer < len(blocks):  # 剩下的文本
@@ -64,8 +65,6 @@ def parseTitles(titleList, mode):
 
             result.append(patWords)
     return result
-
-
 
 
 def initTest(mode):
@@ -134,28 +133,35 @@ def toVec(argDict, negTrain, posTrain, testTitle):
 if __name__ == '__main__':
     mode = 1
     argDict = {"size": 50,  # 向量维度数
-                "alpha": 0,  # 学习率
-                "min_count": 1,  # 词频min_count以下不计入考虑范围
-                "alg": 1  # Training algorithm: 1 for skip-gram; otherwise CBOW.˚
+               "alpha": 0,  # 学习率
+               "min_count": 1,  # 词频min_count以下不计入考虑范围
+               "alg": 1  # Training algorithm: 1 for skip-gram; otherwise CBOW.˚
                }
     # 初始化各路参数
     negTrain, negTitleNum, posTrain, posTitleNum = initTrain(mode)  # l:标题数目
     testTitle, testLabel = initTest(mode + 1)
 
-
     # initial word vector
     trainVector, trainLabel, testVector = toVec(argDict=argDict, negTrain=negTrain,
                                                 posTrain=posTrain, testTitle=testTitle)
-    # print("vector convert finished")
-    #
-    # clf = svm.SVC(kernel='rbf', C=1,max_iter=1000)
-    # clf.fit(trainVector, trainLabel)
-    # # pre = clf.predict(x_test)
-    # prediction = clf.predict(testVector)
-    # print("SVM over")
-    # # 准确率
-    # score = metrics.accuracy_score(testLabel, prediction)
-    # print("准确率为：")
-    # print(score)
-    print(trainVector.shape)
-    np.save("trainVector.npy",trainVector)
+    print("vector convert finished")
+
+    # print(trainVector.shape)
+    np.save("trainVector.npy", trainVector)
+    csvFile = codecs.open("trainLabel.csv", 'w+', 'utf-8')
+    writer = csv.writer(csvFile, delimiter=' ')
+    for i in trainLabel:
+        writer.writerow(i)
+    print("Label save finished")
+
+    clf = svm.SVC(kernel='rbf', C=1,max_iter=1000)
+    clf.fit(trainVector, trainLabel)
+    # pre = clf.predict(x_test)
+    prediction = clf.predict(testVector)
+    print("SVM over")
+    # 准确率
+    score = metrics.accuracy_score(testLabel, prediction)
+    print("准确率为：")
+    print(score)
+
+
