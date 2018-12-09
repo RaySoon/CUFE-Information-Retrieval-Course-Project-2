@@ -144,16 +144,18 @@ if __name__ == '__main__':
 
 
     # initial word vector
-    trainEntry, trainLabel, testEntry = toVec(argDict=argDict, negTrain=negTrain,
-                                              posTrain=posTrain, testTitle=testTitle)
-    print("vector convert finished")
-
-    clf = svm.SVC(kernel='rbf', C=1,max_iter=1000)
-    clf.fit(trainEntry, trainLabel)
-    # pre = clf.predict(x_test)
-    prediction = clf.predict(testEntry)
-    print("SVM over")
-    # 准确率
-    score = metrics.accuracy_score(testLabel, prediction)
-    print("准确率为：")
-    print(score)
+    trainVector, trainLabel, testVector = toVec(argDict=argDict, negTrain=negTrain,
+                                                posTrain=posTrain, testTitle=testTitle)
+    # print("vector convert finished")
+    #
+    # clf = svm.SVC(kernel='rbf', C=1,max_iter=1000)
+    # clf.fit(trainVector, trainLabel)
+    # # pre = clf.predict(x_test)
+    # prediction = clf.predict(testVector)
+    # print("SVM over")
+    # # 准确率
+    # score = metrics.accuracy_score(testLabel, prediction)
+    # print("准确率为：")
+    # print(score)
+    print(trainVector.shape)
+    np.save("trainVector.npy",trainVector)
