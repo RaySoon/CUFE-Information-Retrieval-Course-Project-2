@@ -30,10 +30,10 @@ def main(_):
             for row in reader:
                 metadata.write('{}\n'.format(row))
     writer = tf.summary.FileWriter(FLAGS.log_dir, sess.graph)
-    config = projector.ProjectorConfig
-    embeddings = config.embeddings.add()
-    embeddings.tensor_name = 'embedding:0'
-    embeddings.metadata_path = os.path.join(FLAGS.log_dir + '/metadata.tsv')
+    config = projector.ProjectorConfig()
+    embedding = config.embeddings.add()
+    embedding.tensor_name = 'embedding:0'
+    embedding.metadata_path = os.path.join(FLAGS.log_dir + '/metadata.tsv')
     projector.visualize_embeddings(writer, config)
 
 
