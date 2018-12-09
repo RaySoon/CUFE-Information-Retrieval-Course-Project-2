@@ -5,6 +5,7 @@ import csv
 import codecs
 from sklearn import svm, metrics
 from gensim.models import Word2Vec
+import random
 
 np.set_printoptions(suppress=True)
 
@@ -130,12 +131,22 @@ def toVec(argDict, negTrain, posTrain, testTitle):
     return trainMeanVector, trainLab, testMeanVector
 
 
+def randomChoose(trainVector, negLen):
+    negSelection = random.sample(range(negLen), 50000)
+    posSelection = random.sample(range(negLen, len(trainVector)), 50000)
+    negResult = [trainVector[index] for index in negSelection]
+    posResult = [trainVector[index] for index in posSelection]
+    result = np.array(negResult + posResult)
+
+    return result
+
+
 if __name__ == '__main__':
     mode = 1
     argDict = {"size": 50,  # 向量维度数
                "alpha": 0,  # 学习率
                "min_count": 1,  # 词频min_count以下不计入考虑范围
-               "alg": 1  # Training algorithm: 1 for skip-gram; otherwise CBOW.˚
+               "alg": 1  # Training algorithm: 1 for skip-gram; otherwise CBOW.?
                }
     # 初始化各路参数
     negTrain, negTitleNum, posTrain, posTitleNum = initTrain(mode)  # l:标题数目
@@ -145,23 +156,24 @@ if __name__ == '__main__':
     trainVector, trainLabel, testVector = toVec(argDict=argDict, negTrain=negTrain,
                                                 posTrain=posTrain, testTitle=testTitle)
     print("vector convert finished")
-
-    # print(trainVector.shape)
-    np.save("trainVector.npy", trainVector)
+    visualizeSamples = randomChoose(trainVector, negTitleNum)
+    print(visualizeSamples.shape)
+    np.save("trainVector.npy", visualizeSamples)
     csvFile = codecs.open("trainLabel.csv", 'w+', 'utf-8')
     writer = csv.writer(csvFile, delimiter=' ')
-    for i in trainLabel:
-        writer.writerow(i)
+    for i in range(100000):
+        if i < 50000:
+            writer.writerow("N")
+        else:
+            writer.writerow("Y")
     print("Label save finished")
-
-    clf = svm.SVC(kernel='rbf', C=1,max_iter=1000)
-    clf.fit(trainVector, trainLabel)
-    # pre = clf.predict(x_test)
-    prediction = clf.predict(testVector)
-    print("SVM over")
-    # 准确率
-    score = metrics.accuracy_score(testLabel, prediction)
-    print("准确率为：")
-    print(score)
-
-
+    #
+    # clf = svm.SVC(kernel='rbf', C=1,max_iter=1000)
+    # clf.fit(trainVector, trainLabel)
+    # # pre = clf.predict(x_test)
+    # prediction = clf.predict(testVector)
+    # print("SVM over")
+    # # 准确率
+    # score = metrics.accuracy_score(testLabel, prediction)
+    # print("准确率为：")
+    # print(score)
